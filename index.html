@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Rotating Cube by Artist-AI</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: black;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="aiCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById('aiCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    let angleX = 0;
+    let angleY = 0;
+    const vertices = [
+      [-1, -1, -1],
+      [-1, -1, 1],
+      [1, -1, 1],
+      [1, -1, -1],
+      [-1, 1, -1],
+      [-1, 1, 1],
+      [1, 1, 1],
+      [1, 1, -1],
+    ];
+
+    const edges = [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 0],
+      [4, 5],
+      [5, 6],
+      [6, 7],
+      [7, 4],
+      [0, 4],
+      [1, 5],
+      [2, 6],
+      [3, 7],
+    ];
+
+    function project(x, y, z) {
+      const scale = 200;
+      const distance = 4;
+      const projectedX = (x * scale) / (z + distance);
+      const projectedY = (y * scale) / (z + distance);
+
+      return [centerX + projectedX, centerY + projectedY];
+    }
+
+    function rotateX(x, y, z, angle) {
+      const cosAngle = Math.cos(angle);
+      const sinAngle = Math.sin(angle);
+
+      const newY = y * cosAngle - z * sinAngle;
+      const newZ = y * sinAngle + z * cosAngle;
+
+      return [x, newY, newZ];
+    }
+
+    function rotateY(x, y, z, angle) {
+      const cosAngle = Math.cos(angle);
+      const sinAngle = Math.sin(angle);
+
+      const newX = x * cosAngle + z * sinAngle;
+      const newZ = -x * sinAngle + z * cosAngle;
+
+      return [newX, y, newZ];
+    }
+
+    function drawCube() {
+      for (const edge of edges) {
+        const [start, end] = edge;
+        const [x1, y1, z1] = vertices[start];
+        const [x2, y2, z2] = vertices[end];
+
+        let [rotatedX1, rotatedY1, rotatedZ1] = rotateX(x1, y1, z1, angleX);
+        let [rotatedX2, rotatedY2, rotatedZ2] = rotateX(x2, y2, z2, angleX);
+
+        [rotatedX1, rotatedY1, rotatedZ1] = rotateY(rotatedX1, rotatedY1, rotatedZ1, angleY);
+        [rotatedX2, rotatedY2, rotatedZ2] = rotateY(rotatedX2, rotatedY2, rotatedZ2, angleY);
+
+        const [projectedX1, projectedY1] = project(rotatedX1, rotatedY1, rotatedZ1);
+        const [projectedX2, projectedY2] = project(rotatedX2, rotatedY2, rotatedZ2);
+
+        const color = Math.floor((rotatedZ1 + rotatedZ2) * 128 + 127);
+        ctx.strokeStyle = `rgb(${color}, ${color}, ${color})`;
+
+        ctx.beginPath();
+        ctx.moveTo(projectedX1, projectedY1);
+        ctx.lineTo(projectedX2, projectedY2);
+        ctx.stroke();
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawCube();
+
+      angleX += 0.01;
+      angleY += 0.01;
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+
+</html>
